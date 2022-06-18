@@ -60,8 +60,7 @@ h1 {
   text-align: center;
 }
 
-input[type="text"],
-input[type="password"] {
+#auth_input {
   display: block;
   box-sizing: border-box;
   margin-bottom: 20px;

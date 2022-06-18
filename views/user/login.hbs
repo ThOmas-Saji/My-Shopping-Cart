@@ -2,8 +2,8 @@
   <div class="left">
     <h1>Login</h1>
     <form action="/login" method="post">
-      <input {{#if loginErr}} class="form-control is-invalid" {{/if}}type="text" name="email" placeholder="E-mail" />
-      <input {{#if loginErr}} class="form-control is-invalid" {{/if}} type="password" name="password"
+      <input id="auth_input" {{#if loginErr}} class="form-control is-invalid" {{/if}}type="text" name="email" placeholder="E-mail" />
+      <input id="auth_input" {{#if loginErr}} class="form-control is-invalid" {{/if}} type="password" name="password"
         placeholder="Password" />
       <input type="submit" />
     </form>
