@@ -1,9 +1,10 @@
 var express = require('express');
 var router = express.Router();
+const productHelpers = require('../helpers/product-helpers')
 
 /* GET users listing. */
 router.get('/', function (req, res, next) {
-  const products = [{
+  const prod = [{
     product_name: "OPPO A15s",
     price: 3394,
     image_url: 'https://m.media-amazon.com/images/I/7136zgtNmJL._SX522_.jpg'
@@ -44,7 +45,11 @@ router.get('/', function (req, res, next) {
     price: 862,
     image_url: 'https://m.media-amazon.com/images/I/71xb2xkN5qL._SX522_.jpg'
   }]
-  res.render('admin/view-products.hbs', { admin: true, products })
+  productHelpers.getAllProducts().then((products) => {
+    res.render('admin/view-products.hbs', { admin: true, products })
+  }).catch((err)=>{
+    console.log("eRROR")
+  })
 });
 
 router.get('/add-product', (req, res) => {
@@ -52,8 +57,17 @@ router.get('/add-product', (req, res) => {
 })
 
 router.post('/add-product', (req, res) => {
-  console.log(req.body)
-  console.log(req.files.image)
+  productHelpers.addProducts(req.body, (id) => {
+    let image = req.files.image;
+    image.mv('./public/product-images/' + id + '.jpg', (err, done) => {
+      if (!err) {
+        res.render('admin/add-product');
+      } else {
+        console.log(err)
+      }
+    })
+
+  })
   return;
 })
 

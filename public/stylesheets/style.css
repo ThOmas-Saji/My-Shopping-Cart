@@ -1,7 +1,25 @@
-
 @import url(https://fonts.googleapis.com/css?family=Roboto:400,300,500);
 *:focus {
   outline: none;
+}
+
+.productDes {
+  opacity: 0;
+  position: relative;
+  z-index: 1;
+  transform: translate(0%, -250%);
+  color: aliceblue;
+  padding: 0.5rem;
+  border-radius: 1rem;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.738);
+}
+
+#product-image {
+  height: 60%;
+}
+.productDes:hover {
+  opacity: 1;
 }
 
 /* body {
