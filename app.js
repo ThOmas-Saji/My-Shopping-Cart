@@ -6,6 +6,9 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var hbs = require('express-handlebars')
 var fileUpload = require('express-fileupload')
+const session = require('express-session');
+
+
 var { connect } = require('./config/connect')
 var userRouter = require('./routes/user');
 var adminRouter = require('./routes/admin');
@@ -21,9 +24,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(fileUpload())
+
+app.use(session({ secret: "KEY", cookie: { maxAge: 600000 }}))
+
 app.use(express.static(path.join(__dirname, 'public')));
-connect((err)=>{
-  if(err){
+connect((err) => {
+  if (err) {
     console.log('Connection faild!')
   } else {
     console.log("DataBase Connected 🚀")

@@ -1,15 +1,34 @@
 <header>
   <nav class="navbar navbar-dark bg-primary">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">My Shopping Cart</a>
-      <form class="d-flex" role="search">
-        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-        <button class="btn text-light" type="submit">Search</button>
-      </form>
+    <div class="container-fluid" style="padding-right: 4rem;">
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup"
         aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
+      <a class="navbar-brand" href="/">My Shopping Cart</a>
+      <div class="dropdown">
+        <button class="btn text-light dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown"
+          aria-expanded="false">
+          {{#if user}}
+          {{user.username}}
+          {{else}}
+          Account
+          {{/if}}
+
+        </button>
+        <div>
+          <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+            {{#if user}}
+            <li><a class="dropdown-item" href="/logout">Logout</a></li>
+            {{else}}
+            <li><a class="dropdown-item" href="/login">Login</a></li>
+            <li><a class="dropdown-item" href="/signup">Signup</a></li>
+            {{/if}}
+          </ul>
+        </div>
+
+      </div>
+
       <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
         <div class="navbar-nav">
           <a class="nav-link active" aria-current="page" href="/">Products</a>
