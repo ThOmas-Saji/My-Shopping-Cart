@@ -14,6 +14,7 @@
           </th>
           <th scope="col">Price</th>
           <th scope="col">Image</th>
+          <th scope="col">Modify</th>
         </tr>
       </thead>
       <tbody>
@@ -25,6 +26,11 @@
           <td>{{this.description}}</td>
           <td>₹{{this.price}}</td>
           <td><img width="50px" src="/product-images/{{this._id}}.jpg" /> </td>
+          <td> <div class="btn-group" role="group">
+            <a href="/admin/edit-product" class="btn btn-outline-primary">Edit</a>
+            <a href="/admin/delete-product/{{this._id}}" class="btn btn-outline-danger" onclick="return confirm('Are you sure want to delete {{this.name}} product ?')">Delete</a>
+            </div>
+          </td>
         </tr>
         {{/each}}
 

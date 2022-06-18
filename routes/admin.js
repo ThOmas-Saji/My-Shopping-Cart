@@ -47,7 +47,7 @@ router.get('/', function (req, res, next) {
   }]
   productHelpers.getAllProducts().then((products) => {
     res.render('admin/view-products.hbs', { admin: true, products })
-  }).catch((err)=>{
+  }).catch((err) => {
     console.log("eRROR")
   })
 });
@@ -69,6 +69,13 @@ router.post('/add-product', (req, res) => {
 
   })
   return;
+})
+
+router.get('/delete-product/:id', (req, res) => {
+  productHelpers.deleteProduct(req.params.id).then((response) => {
+    
+  })
+  res.redirect('/admin')
 })
 
 module.exports = router;
