@@ -41,18 +41,36 @@ module.exports = {
     })
   },
   addToCart: (productId, userId) => {
+    let productObj = {
+      item: objectId(productId),
+      quantity: 1
+    }
     return new Promise(async (resolve, reject) => {
       let userCart = await db.get().collection(CART_COLLECTION).findOne({ user: objectId(userId) })
       if (userCart) {
-        db.get().collection(CART_COLLECTION).updateOne({ user: objectId(userId) }, { $push: { products: objectId(productId) } }).then((response) => {
-          resolve();
-        })
+        let productExist = userCart.products.findIndex(product => product.item == productId)
+        if (productExist != -1) {
+          db.get().collection(CART_COLLECTION).updateOne({ user: objectId(userId), 'products.item': objectId(productId) }, {
+            $inc: {
+              'products.$.quantity': 1
+            }
+          }).then(() => {
+            resolve();
+          })
+        }
+        else {
+          db.get().collection(CART_COLLECTION).updateOne({ user: objectId(userId) }, {
+            $push: { products: productObj }
+          }).then(() => {
+            resolve();
+          })
+        }
       } else {
         let cart = {
           user: objectId(userId),
-          products: [objectId(productId)]
+          products: [productObj]
         }
-        db.get().collection(CART_COLLECTION).insertOne(cart).then((response) => {
+        db.get().collection(CART_COLLECTION).insertOne(cart).then(() => {
           resolve();
         })
       }
@@ -67,23 +85,33 @@ module.exports = {
           }
         },
         {
+          $unwind: '$products'
+        },
+        {
+          $project: {
+            item: '$products.item',
+            quantity: '$products.quantity'
+          }
+        },
+        {
           $lookup: {
             from: PRODUCTS_COLLECTION,
-            let: { prodList: '$products' },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $in: ['$_id', '$$prodList']
-                  }
-                }
-              }
-            ],
-            as: 'cartItems'
+            localField: 'item',
+            foreignField: '_id',
+            as: "product"
+
+          },
+        }, {
+          $project: {
+            item: 1,
+            quantity: 1,
+            product: {
+              $arrayElemAt: ['$product', 0]
+            }
           }
         }
       ]).toArray()
-      resolve(cartItems[0].cartItems);
+      resolve(cartItems);
     })
   },
   getCartCount: (userId) => {
@@ -94,6 +122,18 @@ module.exports = {
         count = user.products.length;
       }
       resolve(count);
+    })
+  },
+  changeProductQuantity: ({ cartId, productId, count }) => {
+    count = Number(count)
+    return new Promise((resolve, reject) => {
+      db.get().collection(CART_COLLECTION).updateOne({ _id: objectId(cartId), 'products.item': objectId(productId) }, {
+        $inc: {
+          'products.$.quantity': count
+        }
+      }).then(() => {
+        resolve();
+      })
     })
   }
 }

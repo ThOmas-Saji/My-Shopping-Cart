@@ -4,14 +4,16 @@ const productHelpers = require('../helpers/product-helpers')
 const userHelpers = require('../helpers/user-helpers')
 /* GET home page. */
 let user;
+let cartCount;
 
 router.get('/', function (req, res, next) {
   user = req.session.user || null
-  let cartCount = null;
+  cartCount = null;
   if (user) {
     userHelpers.getCartCount(user._id).then((response) => {
       cartCount = response
     })
+   
   }
   productHelpers.getAllProducts().then((products) => {
     res.render('user/view-products', { products, admin: false, user, cartCount });
@@ -70,7 +72,9 @@ router.get('/add-to-cart/:id', (req, res) => {
 
 })
 
-
+router.post('/change-product-quantity', (req, res) => {
+  userHelpers.changeProductQuantity(req.body)
+})
 //middleware for checking user logged in or not
 function verifyLogin(req, res, next) {
   if (req.session.loggedIn) {
