@@ -4,22 +4,16 @@ const productHelpers = require('../helpers/product-helpers')
 const userHelpers = require('../helpers/user-helpers')
 /* GET home page. */
 let user;
-let cartCount;
+let cartCount = 0;
 
-router.get('/', function (req, res, next) {
+router.get('/', async function (req, res, next) {
   user = req.session.user || null
-  cartCount = null;
+  cartCount = 0;
   if (user) {
-    userHelpers.getCartCount(user._id).then((response) => {
-      cartCount = response
-    })
-   
+    cartCount = await userHelpers.getCartCount(user._id)
   }
-  productHelpers.getAllProducts().then((products) => {
-    res.render('user/view-products', { products, admin: false, user, cartCount });
-  }).catch((err) => {
-    console.log('ERRoR')
-  })
+  let products = await productHelpers.getAllProducts()
+  res.render('user/view-products', { products, admin: false, user, cartCount })
 });
 
 router.get('/login', (req, res) => {
@@ -56,7 +50,16 @@ router.post('/login', (req, res) => {
 
 router.get('/cart', verifyLogin, async (req, res) => {
   let products = await userHelpers.getAllCartProducts(req.session.user._id)
-  res.render('user/cart', { admin: false, user, products })
+  cartCount = null;
+  cartCount = await userHelpers.getCartCount(req.session.user._id)
+  let total = 0
+  products.forEach((el) => {
+    let qty = el.quantity;
+    let price = el.product.price;
+    let sum = qty * price
+    total += sum;
+  })
+  res.render('user/cart', { admin: false, user, products, cartCount, total })
 })
 
 router.get('/logout', (req, res) => {
@@ -65,16 +68,65 @@ router.get('/logout', (req, res) => {
 })
 
 router.get('/add-to-cart/:id', (req, res) => {
-
   userHelpers.addToCart(req.params.id, req.session.user._id).then((response) => {
     res.json({ status: true })
   })
 
 })
+router.get('/change-total', async (req, res) => {
+  let products = await userHelpers.getAllCartProducts(req.session.user._id)
+  let total = 0
+  products.forEach((el) => {
+    let qty = el.quantity;
+    let price = el.product.price;
+    let sum = qty * price
+    total += sum;
+  })
+  res.json({ total })
+})
 
 router.post('/change-product-quantity', (req, res) => {
-  userHelpers.changeProductQuantity(req.body)
+  userHelpers.changeProductQuantity(req.body).then((response) => {
+    res.json(response)
+  })
 })
+
+router.post('/remove-product-from-cart', (req, res) => {
+  userHelpers.removeProductFromCart(req.body).then((response) => {
+    res.json(response)
+  })
+})
+router.get('/place-order', verifyLogin, async (req, res) => {
+  user = req.session.user
+  let products = await userHelpers.getAllCartProducts(req.session.user._id)
+  let total = 0
+  products.forEach((el) => {
+    let qty = el.quantity;
+    let price = el.product.price;
+    let sum = qty * price
+    total += sum;
+  })
+  res.render('user/place-order', { user, total })
+})
+
+router.post('/place-order', async (req, res) => {
+  let products = await userHelpers.getAllCartProducts(req.body.userId)
+  let total = 0
+  products.forEach((el) => {
+    let qty = el.quantity;
+    let price = el.product.price;
+    let sum = qty * price
+    total += sum;
+  })
+  await userHelpers.placeOrder(req.body, products, total);
+  res.json({ status: true })
+})
+
+router.get('/order-complete', verifyLogin, async (req, res) => {
+  let { deliveryDetails, payment_method, status, products, total, date } = await userHelpers.getPlacedUserOrder(req.session.user._id)
+  res.render('user/order-complete', { user, date, deliveryDetails, payment_method, status, products, total })
+})
+
 //middleware for checking user logged in or not
 function verifyLogin(req, res, next) {
   if (req.session.loggedIn) {

@@ -1,6 +1,7 @@
 const db = require('../config/connect')
-const { USERS_COLLECTION, CART_COLLECTION, PRODUCTS_COLLECTION } = require('../config/collections')
+const { USERS_COLLECTION, CART_COLLECTION, PRODUCTS_COLLECTION, ORDER_COLLECTION } = require('../config/collections')
 const bcrypt = require('bcrypt')
+const { response } = require('../app')
 const objectId = require('mongodb').ObjectId
 
 module.exports = {
@@ -54,15 +55,15 @@ module.exports = {
             $inc: {
               'products.$.quantity': 1
             }
-          }).then(() => {
-            resolve();
+          }).then((response) => {
+            resolve({ stauts: true });
           })
         }
         else {
           db.get().collection(CART_COLLECTION).updateOne({ user: objectId(userId) }, {
             $push: { products: productObj }
           }).then(() => {
-            resolve();
+            resolve({ stauts: true });
           })
         }
       } else {
@@ -71,7 +72,7 @@ module.exports = {
           products: [productObj]
         }
         db.get().collection(CART_COLLECTION).insertOne(cart).then(() => {
-          resolve();
+          resolve({ stauts: true });
         })
       }
     })
@@ -124,16 +125,68 @@ module.exports = {
       resolve(count);
     })
   },
-  changeProductQuantity: ({ cartId, productId, count }) => {
+  changeProductQuantity: ({ cartId, productId, count, quantity }) => {
     count = Number(count)
+    quantity = Number(quantity)
     return new Promise((resolve, reject) => {
-      db.get().collection(CART_COLLECTION).updateOne({ _id: objectId(cartId), 'products.item': objectId(productId) }, {
-        $inc: {
-          'products.$.quantity': count
-        }
-      }).then(() => {
-        resolve();
+      if (count == -1 && quantity == 1) {
+        db.get().collection(CART_COLLECTION).updateOne({ _id: objectId(cartId) }, {
+          $pull: { products: { item: objectId(productId) } }
+        }).then((response) => {
+          resolve({ removeProduct: true })
+        })
+      } else {
+        db.get().collection(CART_COLLECTION).updateOne({ _id: objectId(cartId), 'products.item': objectId(productId) }, {
+          $inc: {
+            'products.$.quantity': count
+          }
+        }).then((response) => {
+          resolve(true);
+        })
+      }
+    })
+  },
+  removeProductFromCart: ({ cartId, productId }) => {
+    return new Promise((resolve, reject) => {
+      db.get().collection(CART_COLLECTION).updateOne({ _id: objectId(cartId) }, {
+        $pull: { products: { item: objectId(productId) } }
+      }).then((response) => {
+        resolve(true)
       })
+    })
+  },
+  getPlacedUserOrder: (userId) => {
+    
+    return new Promise(async (resolve, reject) => {
+      let orders = await db.get().collection(ORDER_COLLECTION).findOne({ userId: objectId(userId) });
+      resolve(orders);
+    })
+  },
+  placeOrder: ({ full_name,
+    mobile,
+    email,
+    address,
+    pincode,
+    userId,
+    payment_method }, products, total) => {
+    let status = payment_method === 'COD' ? 'Placed' : 'Pending';
+    let date = new Date();
+    let orderObj = {
+      deliveryDetails: {
+        full_name,
+        address, mobile, pincode, email
+      },
+      userId: objectId(userId),
+      payment_method,
+      status,
+      products,
+      total,
+      date
+    }
+    return new Promise(async (resolve, reject) => {
+      let response = await db.get().collection(ORDER_COLLECTION).insertOne(orderObj)
+      await db.get().collection(CART_COLLECTION).findOneAndDelete({ user: objectId(userId) })
+      resolve();
     })
   }
 }

@@ -7,8 +7,10 @@ function addToCart(productId) {
         let count = $('#cart-count').html()
         count = Number(count) + 1;
         $('#cart-count').html(count);
+
+
       }
-      
     }
   })
 }
+

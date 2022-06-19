@@ -21,7 +21,8 @@
                 <!-- Data -->
                 <p><strong>{{this.product.name}}</strong></p>
                 <p>{{this.product.description}}</p>
-                <button type="button" class="btn btn-sm me-1 mb-2" data-mdb-toggle="tooltip" title="Remove item">
+                <button type="button" class="btn btn-sm me-1 mb-2" data-mdb-toggle="tooltip"
+                  onclick="removeProductFromCart('{{this._id}}','{{this.product._id}}')" title="Remove item">
                   <ion-icon style="font-size: 20px; color:rgb(243, 14, 45)" name="trash-outline"></ion-icon>
                 </button>
                 <button type="button" class="btn  btn-sm mb-2" data-mdb-toggle="tooltip" title="Move to the wish list">
@@ -38,11 +39,12 @@
                     <ion-icon name="remove-outline"></ion-icon>
                   </button>
                   <div class="form-outline">
-                    <input id="form1" min="0" name="quantity" type="number" class="form-control"
+                    <input min="0" name="quantity" type="number" readonly class="form-control" id='{{this.product._id}}'
                       style="width: 60px; height:100%" value="{{this.quantity}}" />
                     <label class="form-label" for="form1">Quantity</label>
                   </div>
-                  <button class="btn btn-primary p-1 ms-2"  onclick="changeQuantity('{{this._id}}','{{this.product._id}}', 1)">
+                  <button class="btn btn-primary p-1 ms-2"
+                    onclick="changeQuantity('{{this._id}}','{{this.product._id}}', 1)">
                     <ion-icon name="add-outline"></ion-icon>
                   </button>
                 </div>
@@ -61,20 +63,6 @@
             <!-- Single item -->
           </div>
         </div>
-        <div class="card mb-4 mb-lg-0">
-          <div class="card-body">
-            <p><strong>We accept</strong></p>
-            <img class="me-2" width="45px"
-              src="https://mdbcdn.b-cdn.net/wp-content/plugins/woocommerce-gateway-stripe/assets/images/visa.svg"
-              alt="Visa" />
-            <img class="me-2" width="45px"
-              src="https://mdbcdn.b-cdn.net/wp-content/plugins/woocommerce-gateway-stripe/assets/images/amex.svg"
-              alt="American Express" />
-            <img class="me-2" width="45px"
-              src="https://mdbcdn.b-cdn.net/wp-content/plugins/woocommerce-gateway-stripe/assets/images/mastercard.svg"
-              alt="Mastercard" />
-          </div>
-        </div>
       </div>
       <div class="col-md-4">
         <div class="card mb-4">
@@ -85,7 +73,7 @@
             <ul class="list-group list-group-flush">
               <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 pb-0">
                 Products
-                <span>$53.98</span>
+                <span id="sub-total">{{total}}</span>
               </li>
               <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                 Shipping
@@ -98,31 +86,83 @@
                     <p class="mb-0">(including VAT)</p>
                   </strong>
                 </div>
-                <span><strong>$53.98</strong></span>
+                <span>
+                  <h2 id="sub-total-2"> ₹ {{total}}</h2>
+                </span>
               </li>
             </ul>
 
-            <button type="button" class="btn btn-primary btn-lg btn-block">
+            <a href="/place-order" type="button" class="btn btn-primary btn-lg btn-block">
               Go to checkout
-            </button>
+            </a>
           </div>
+
+          <div class="card mb-4 mb-lg-0">
+            <div class="card-body">
+              <p><strong>We accept</strong></p>
+              <img class="me-2" width="45px"
+                src="https://mdbcdn.b-cdn.net/wp-content/plugins/woocommerce-gateway-stripe/assets/images/visa.svg"
+                alt="Visa" />
+              <img class="me-2" width="45px"
+                src="https://mdbcdn.b-cdn.net/wp-content/plugins/woocommerce-gateway-stripe/assets/images/amex.svg"
+                alt="American Express" />
+              <img class="me-2" width="45px"
+                src="https://mdbcdn.b-cdn.net/wp-content/plugins/woocommerce-gateway-stripe/assets/images/mastercard.svg"
+                alt="Mastercard" />
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
   </div>
 </section>
 <script>
+  function removeProductFromCart(cartId, productId) {
+    $.ajax({
+      url: '/remove-product-from-cart',
+      data: {
+        cartId,
+        productId
+      },
+      method: 'post',
+      success: (response) => {
+        alert("Product Removed from cart")
+        location.reload();
+      }
+    })
+  }
   function changeQuantity(cartId, productId, count) {
+    let quantity = Number(document.getElementById(productId).value);
+    count = Number(count)
     $.ajax({
       url: '/change-product-quantity',
       data: {
         cartId,
         productId,
-        count
+        count,
+        quantity
       },
       method: 'post',
       success: (response) => {
+        if (response.removeProduct) {
+          alert("Product Removed from cart")
+          location.reload()
+        } else {
+          document.getElementById(productId).value = quantity + count
+          changeTotal()
+        }
+      }
+    })
+  }
 
+  function changeTotal() {
+    $.ajax({
+      url: '/change-total/',
+      method: 'get',
+      success: ({ total }) => {
+        document.getElementById('sub-total').innerText = total;
+        document.getElementById('sub-total-2').innerText = ` ₹ ${total}`;
       }
     })
   }
