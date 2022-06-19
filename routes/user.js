@@ -7,8 +7,14 @@ let user;
 
 router.get('/', function (req, res, next) {
   user = req.session.user || null
+  let cartCount = null;
+  if (user) {
+    userHelpers.getCartCount(user._id).then((response) => {
+      cartCount = response
+    })
+  }
   productHelpers.getAllProducts().then((products) => {
-    res.render('user/view-products', { products, admin: false, user });
+    res.render('user/view-products', { products, admin: false, user, cartCount });
   }).catch((err) => {
     console.log('ERRoR')
   })
@@ -26,9 +32,11 @@ router.get('/signup', (req, res) => {
   res.render('user/signup')
 })
 router.post('/signup', (req, res) => {
-  userHelpers.doSignup(req.body).then((data) => {
-    console.log(data)
-    res.render('user/signup')
+  userHelpers.doSignup(req.body).then(async (id) => {
+    let user = await userHelpers.getOneUser(id)
+    req.session.loggedIn = true;
+    req.session.user = user;
+    res.redirect('/')
   })
 })
 router.post('/login', (req, res) => {
@@ -44,13 +52,22 @@ router.post('/login', (req, res) => {
   })
 })
 
-router.get('/cart', verifyLogin, (req, res) => {
-  res.render('user/cart', { admin: false, user })
+router.get('/cart', verifyLogin, async (req, res) => {
+  let products = await userHelpers.getAllCartProducts(req.session.user._id)
+  res.render('user/cart', { admin: false, user, products })
 })
 
 router.get('/logout', (req, res) => {
   req.session.destroy();
   res.redirect('/')
+})
+
+router.get('/add-to-cart/:id', (req, res) => {
+
+  userHelpers.addToCart(req.params.id, req.session.user._id).then((response) => {
+    res.json({ status: true })
+  })
+
 })
 
 
@@ -59,7 +76,7 @@ function verifyLogin(req, res, next) {
   if (req.session.loggedIn) {
     next()
   } else {
-    res.render('user/signup')
+    res.redirect('/signup')
   }
 }
 
