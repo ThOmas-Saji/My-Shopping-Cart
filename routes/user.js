@@ -136,21 +136,29 @@ router.post('/place-order', async (req, res) => {
     res.json({ status: false, razorpay: false, onlilePayError: false })
   } else {
     latestOrder = await userHelpers.placeOrder(req.body, products, total);
-    if(req.body.payment_method === 'COD'){
-       res.json({ status: true, razorpay: false, onlilePayError: false })
+    if (req.body.payment_method === 'COD') {
+      res.json({ status: true, razorpay: false, onlilePayError: false })
     } else {
-     let razorpayOrder = await userHelpers.generateRazorpay(latestOrder, total);
-     if(razorpayOrder.error){  
-      res.json({status: false, razorpay: false, onlilePayError: true })
-     }else{
-          res.json({status: false, razorpay: true, razorpayOrder, onlilePayError: false })
-     }
-    
-    }  
+      let razorpayOrder = await userHelpers.generateRazorpay(latestOrder, total);
+      if (razorpayOrder.error) {
+        res.json({ status: false, razorpay: false, onlilePayError: true })
+      } else {
+        res.json({ status: false, razorpay: true, razorpayOrder, onlilePayError: false })
+      }
+
+    }
   }
 })
-router.get('/verify-payment', verifyLogin, (req, res)=>{
-  res.redirect('/orders')
+router.post('/verify-payment', verifyLogin, async (req, res) => {
+  try {
+    await userHelpers.verifyPayment(req.body)
+    await userHelpers.changeOrderStatus(req.body.orderId)
+    console.log("first")
+    res.json({ status: true, message: 'Payment Success' })
+  } catch (err) {
+    console.log("failed")
+    res.json({ status: false, message: 'Payment Failed' })
+  }
 })
 
 router.get('/order-complete', verifyLogin, async (req, res) => {
@@ -165,6 +173,7 @@ router.get('/orders', verifyLogin, async (req, res) => {
   if (user) {
     cartCount = await userHelpers.getCartCount(user._id)
   }
+  console.log(orders)
   res.render("user/orders", { orders, user, cartCount })
 })
 

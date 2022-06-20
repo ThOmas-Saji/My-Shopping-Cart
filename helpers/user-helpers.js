@@ -2,6 +2,8 @@ const db = require('../config/connect')
 const { USERS_COLLECTION, CART_COLLECTION, PRODUCTS_COLLECTION, ORDER_COLLECTION } = require('../config/collections')
 const bcrypt = require('bcrypt')
 const Razorpay = require('razorpay')
+const crypto = require('crypto');
+const { resolve } = require('path');
 const objectId = require('mongodb').ObjectId
 
 module.exports = {
@@ -156,7 +158,6 @@ module.exports = {
     })
   },
   getPlacedUserOrder: (cartId) => {
-
     return new Promise(async (resolve, reject) => {
       let orders = await db.get().collection(ORDER_COLLECTION).findOne({ _id: objectId(cartId) });
       resolve(orders);
@@ -193,9 +194,6 @@ module.exports = {
   },
   getAllOrders: (userId) => {
     return new Promise((resolve, reject) => {
-      // db.get().collection(ORDER_COLLECTION).find({userId: objectId(userId)}).toArray().then((response)=>{
-      //   resolve(response);
-      // })
       db.get().collection(ORDER_COLLECTION).aggregate([
         {
           $match: {
@@ -208,7 +206,7 @@ module.exports = {
         {
           $project: {
             item: '$products.item',
-            quantity: '$products.quantity'
+            quantity: '$products.quantity',
           }
         },
         {
@@ -252,6 +250,28 @@ module.exports = {
           resolve(order)
         }
       })
+    })
+  },
+  verifyPayment : (deatils)=>{
+    return new Promise(async(resolve, reject) =>{
+      let hmac = crypto.createHmac('sha256', process.env.SHA256_SECRET_KEY)
+      hmac.update(deatils['response[razorpay_order_id]']+'|'+deatils['response[razorpay_payment_id]'])
+      hmac = hmac.digest('hex');
+      if(hmac == deatils['response[razorpay_signature]']){
+        resolve()
+      }else{
+        reject()
+      }
+    })
+  },
+  changeOrderStatus: (orderId) => {
+    return new Promise( async(resolve, reject)=>{
+      await db.get().collection(ORDER_COLLECTION).updateOne({_id:objectId(orderId)},{
+        $set:{
+          status: "Placed"
+        }
+      })
+      resolve()
     })
   }
 }
