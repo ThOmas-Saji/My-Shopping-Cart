@@ -1,7 +1,7 @@
 const db = require('../config/connect')
 const { USERS_COLLECTION, CART_COLLECTION, PRODUCTS_COLLECTION, ORDER_COLLECTION } = require('../config/collections')
 const bcrypt = require('bcrypt')
-const { response } = require('../app')
+const Razorpay = require('razorpay')
 const objectId = require('mongodb').ObjectId
 
 module.exports = {
@@ -20,7 +20,7 @@ module.exports = {
       let response = {};
       let user = await db.get().collection(USERS_COLLECTION).findOne({ email: userData.email })
       if (!user) {
-        return console.log('Login Failed')
+        resolve({ status: false, message: 'Email or Passoword is wrong !' })
       } else {
         bcrypt.compare(userData.password, user.password).then((status) => {
           if (status) {
@@ -28,7 +28,7 @@ module.exports = {
             response.status = true;
             resolve(response);
           } else {
-            resolve({ status: false })
+            resolve({ status: false, message: 'Email or Passoword is wrong !' })
           }
         })
       }
@@ -155,10 +155,10 @@ module.exports = {
       })
     })
   },
-  getPlacedUserOrder: (userId) => {
-    
+  getPlacedUserOrder: (cartId) => {
+
     return new Promise(async (resolve, reject) => {
-      let orders = await db.get().collection(ORDER_COLLECTION).findOne({ userId: objectId(userId) });
+      let orders = await db.get().collection(ORDER_COLLECTION).findOne({ _id: objectId(cartId) });
       resolve(orders);
     })
   },
@@ -186,7 +186,72 @@ module.exports = {
     return new Promise(async (resolve, reject) => {
       let response = await db.get().collection(ORDER_COLLECTION).insertOne(orderObj)
       await db.get().collection(CART_COLLECTION).findOneAndDelete({ user: objectId(userId) })
-      resolve();
+      let res = response.insertedId.toString()
+      res = res.split('(')
+      resolve(res[0]);
+    })
+  },
+  getAllOrders: (userId) => {
+    return new Promise((resolve, reject) => {
+      // db.get().collection(ORDER_COLLECTION).find({userId: objectId(userId)}).toArray().then((response)=>{
+      //   resolve(response);
+      // })
+      db.get().collection(ORDER_COLLECTION).aggregate([
+        {
+          $match: {
+            userId: objectId(userId)
+          }
+        },
+        {
+          $unwind: '$products'
+        },
+        {
+          $project: {
+            item: '$products.item',
+            quantity: '$products.quantity'
+          }
+        },
+        {
+          $lookup: {
+            from: PRODUCTS_COLLECTION,
+            localField: 'item',
+            foreignField: '_id',
+            as: "product"
+
+          },
+        }, {
+          $project: {
+            item: 1,
+            quantity: 1,
+            product: {
+              $arrayElemAt: ['$product', 0]
+            }
+          }
+        }
+      ]).toArray().then((response) => {
+        resolve(response);
+      })
+    })
+  },
+  generateRazorpay: (orderId, total) => {
+    let instance = new Razorpay({
+      key_id: process.env.KEY_ID,
+      key_secret: process.env.KEY_SECRET,
+    });
+    return new Promise(async (resolve, reject) => {
+      let options = {
+        amount: total,
+        currency: 'INR',
+        receipt: orderId
+      }
+      instance.orders.create(options, function (err, order) {
+        if (err) {
+          console.log("Error"+err)
+          resolve({error:true})
+        } else {
+          resolve(order)
+        }
+      })
     })
   }
 }

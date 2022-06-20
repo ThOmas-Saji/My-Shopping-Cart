@@ -20,32 +20,40 @@ router.get('/login', (req, res) => {
   if (req.session.loggedIn) {
     res.redirect('/')
   } else {
-    res.render('user/login', { "loginErr": req.session.loginErr })
+    res.render('user/login', { "loginErr": req.session.loginErr, error: false })
     req.session.loginErr = false;
   }
 })
 router.get('/signup', (req, res) => {
-  res.render('user/signup')
+  res.render('user/signup', { error: false })
 })
 router.post('/signup', (req, res) => {
-  userHelpers.doSignup(req.body).then(async (id) => {
-    let user = await userHelpers.getOneUser(id)
-    req.session.loggedIn = true;
-    req.session.user = user;
-    res.redirect('/')
-  })
+  if (!req.body.email || !req.body.password || !req.body.username) {
+    res.render('user/signup', { error: true })
+  } else {
+    userHelpers.doSignup(req.body).then(async (id) => {
+      let user = await userHelpers.getOneUser(id)
+      req.session.loggedIn = true;
+      req.session.user = user;
+      res.redirect('/')
+    })
+  }
 })
 router.post('/login', (req, res) => {
-  userHelpers.doLogin(req.body).then((response) => {
-    if (response.status) {
-      req.session.loggedIn = true;
-      req.session.user = response.user;
-      res.redirect('/')
-    } else {
-      req.session.loginErr = true
-      res.redirect('/login')
-    }
-  })
+  if (!req.body.email || !req.body.password) {
+    res.render('user/login', { error: true })
+  } else {
+    userHelpers.doLogin(req.body).then((response) => {
+      if (response.status) {
+        req.session.loggedIn = true;
+        req.session.user = response.user;
+        res.redirect('/')
+      } else {
+        req.session.loginErr = true
+        res.redirect('/login')
+      }
+    })
+  }
 })
 
 router.get('/cart', verifyLogin, async (req, res) => {
@@ -106,11 +114,13 @@ router.get('/place-order', verifyLogin, async (req, res) => {
     let sum = qty * price
     total += sum;
   })
-  res.render('user/place-order', { user, total })
+  res.render('user/place-order', { user, total, error: false })
 })
 
+let latestOrder;
 router.post('/place-order', async (req, res) => {
-  let products = await userHelpers.getAllCartProducts(req.body.userId)
+  user = req.session.user
+  let products = await userHelpers.getAllCartProducts(req.session.user._id)
   let total = 0
   products.forEach((el) => {
     let qty = el.quantity;
@@ -118,13 +128,44 @@ router.post('/place-order', async (req, res) => {
     let sum = qty * price
     total += sum;
   })
-  await userHelpers.placeOrder(req.body, products, total);
-  res.json({ status: true })
+  if (!req.body.full_name ||
+    !req.body.mobile ||
+    !req.body.address ||
+    !req.body.pincode ||
+    !req.body.payment_method) {
+    res.json({ status: false, razorpay: false, onlilePayError: false })
+  } else {
+    latestOrder = await userHelpers.placeOrder(req.body, products, total);
+    if(req.body.payment_method === 'COD'){
+       res.json({ status: true, razorpay: false, onlilePayError: false })
+    } else {
+     let razorpayOrder = await userHelpers.generateRazorpay(latestOrder, total);
+     if(razorpayOrder.error){  
+      res.json({status: false, razorpay: false, onlilePayError: true })
+     }else{
+          res.json({status: false, razorpay: true, razorpayOrder, onlilePayError: false })
+     }
+    
+    }  
+  }
+})
+router.get('/verify-payment', verifyLogin, (req, res)=>{
+  res.redirect('/orders')
 })
 
 router.get('/order-complete', verifyLogin, async (req, res) => {
-  let { deliveryDetails, payment_method, status, products, total, date } = await userHelpers.getPlacedUserOrder(req.session.user._id)
+  let { deliveryDetails, payment_method, status, products, total, date } = await userHelpers.getPlacedUserOrder(latestOrder)
   res.render('user/order-complete', { user, date, deliveryDetails, payment_method, status, products, total })
+})
+
+router.get('/orders', verifyLogin, async (req, res) => {
+  let orders = await userHelpers.getAllOrders(req.session.user._id);
+  user = req.session.user || null
+  cartCount = 0;
+  if (user) {
+    cartCount = await userHelpers.getCartCount(user._id)
+  }
+  res.render("user/orders", { orders, user, cartCount })
 })
 
 //middleware for checking user logged in or not

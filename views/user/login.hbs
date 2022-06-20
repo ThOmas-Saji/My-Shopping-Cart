@@ -1,14 +1,18 @@
 <div id="login-box">
   <div class="left">
     <h1>Login</h1>
+    {{#if error}}
+    <p class="bg-danger text-light text-center">Please fill all fileds</p>
+    {{/if}}
     <form action="/login" method="post">
-      <input id="auth_input" {{#if loginErr}} class="form-control is-invalid" {{/if}}type="text" name="email" placeholder="E-mail" />
-      <input id="auth_input" {{#if loginErr}} class="form-control is-invalid" {{/if}} type="password" name="password"
+      <input id="auth_input" {{#if error}} class="form-control is-invalid" {{/if}} {{#if loginErr}}
+        class="form-control is-invalid" {{/if}}type="text" name="email" placeholder="E-mail" />
+      <input id="auth_input" {{#if error}} class="form-control is-invalid" {{/if}} {{#if loginErr}} class="form-control is-invalid" {{/if}} type="password" name="password"
         placeholder="Password" />
       <input type="submit" />
     </form>
     {{#if loginErr}}
-    <p style="color: red;">Please provide correct email or password !</p>
+    <p class="bg-danger text-light text-center">Please provide correct email and password !</p>
     {{/if}}
     <p>If you don't have an account ? <a href="/signup">Signup</a></p>
   </div>

@@ -1,6 +1,9 @@
 <section>
   <div class="container-fluid bg-light m-auto mt-4 p-4 rounded" style="width: 40%;">
     <p class="text-center"><strong>Checkout Form</strong></p>
+    {{#if error}}
+    <p class="bg-danger text-light text-center">Please fill all fileds</p>
+    {{/if}}
     <div class="card">
       <form id="checkout-form" class="card-body">
         <div class="row">
@@ -23,24 +26,24 @@
         </div>
 
         <div class="form-floating">
-          <textarea name="address" class="form-control" placeholder="Address" id="floatingTextarea2" style="height: 100px"></textarea>
+          <textarea name="address" class="form-control" placeholder="Address" id="floatingTextarea2"
+            style="height: 100px"></textarea>
           <label for="floatingTextarea2">Address</label>
         </div>
         <div class="md-form mb-2">
           <label for="floatingTextarea2">Pincode</label>
           <input name="pincode" type="number" id="floatingTextarea2" class="form-control">
-          <input name="userId" type="text" class="form-control"
-          value="{{user._id}}" hidden>
+          <input name="userId" type="text" class="form-control" value="{{user._id}}" hidden>
         </div>
         <div class="form-check">
-          <p>Payement Method</p>
+          <p class="p-2 text-success text-center">Choose Payement Method</p>
           <input class="form-check-input" type="radio" value="COD" name="payment_method" id="flexRadioDefault1">
           <label class="form-check-label" for="flexRadioDefault1">
             Cash On Delivery
           </label>
         </div>
         <div class="form-check">
-          <input class="form-check-input" type="radio" value="ONLINE" name="payment_method" id="flexRadioDefault2" >
+          <input class="form-check-input" type="radio" value="ONLINE" name="payment_method" id="flexRadioDefault2">
           <label class="form-check-label" for="flexRadioDefault2">
             Online Payment
           </label>

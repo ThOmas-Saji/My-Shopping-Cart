@@ -1,0 +1,29 @@
+<section>
+  <div class="container bg-light mt-4 p-4 rounded">
+    <h2 class="text-center">My Orders</h2>
+    <table class="table table-striped table-dark">
+      <thead>
+        <tr>
+          <th scope="col">Product</th>
+          <th scope="col">Name</th>
+          <th scope="col">Description</th>
+          <th scope="col">Price</th>
+          <th scope="col">Quantity</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each orders}}
+        <tr>
+          <td style="width: 10%;"> <img id="product-image" src="/product-images/{{this.product._id}}.jpg" class="card-img-top"
+              alt="dummy_images"></td>
+          <td>{{this.product.name}}</td>
+          <td>{{this.product.description}}</td>
+          <td>{{this.product.price}}</td>
+          <td>{{this.quantity}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+
+</section>
