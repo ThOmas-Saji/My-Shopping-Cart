@@ -170,8 +170,15 @@ module.exports = {
     pincode,
     userId,
     payment_method }, products, total) => {
-    let status = payment_method === 'COD' ? 'Placed' : 'Pending';
-    let date = new Date();
+      let status = payment_method === 'COD' ? 'Placed' : 'Pending';
+    // Calcualting current date
+    var today = new Date();
+    var dd = String(today.getDate()).padStart(2, '0');
+    var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+    var yyyy = today.getFullYear();
+    today = mm + '/' + dd + '/' + yyyy;
+    let date = today
+     // Calcualting current date
     let orderObj = {
       deliveryDetails: {
         full_name,
@@ -238,36 +245,36 @@ module.exports = {
     });
     return new Promise(async (resolve, reject) => {
       let options = {
-        amount: total,
+        amount: total*100,
         currency: 'INR',
         receipt: orderId
       }
       instance.orders.create(options, function (err, order) {
         if (err) {
-          console.log("Error"+err)
-          resolve({error:true})
+          console.log("Error" + err)
+          resolve({ error: true })
         } else {
           resolve(order)
         }
       })
     })
   },
-  verifyPayment : (deatils)=>{
-    return new Promise(async(resolve, reject) =>{
+  verifyPayment: (deatils) => {
+    return new Promise(async (resolve, reject) => {
       let hmac = crypto.createHmac('sha256', process.env.SHA256_SECRET_KEY)
-      hmac.update(deatils['response[razorpay_order_id]']+'|'+deatils['response[razorpay_payment_id]'])
+      hmac.update(deatils['response[razorpay_order_id]'] + '|' + deatils['response[razorpay_payment_id]'])
       hmac = hmac.digest('hex');
-      if(hmac == deatils['response[razorpay_signature]']){
+      if (hmac == deatils['response[razorpay_signature]']) {
         resolve()
-      }else{
+      } else {
         reject()
       }
     })
   },
   changeOrderStatus: (orderId) => {
-    return new Promise( async(resolve, reject)=>{
-      await db.get().collection(ORDER_COLLECTION).updateOne({_id:objectId(orderId)},{
-        $set:{
+    return new Promise(async (resolve, reject) => {
+      await db.get().collection(ORDER_COLLECTION).updateOne({ _id: objectId(orderId) }, {
+        $set: {
           status: "Placed"
         }
       })

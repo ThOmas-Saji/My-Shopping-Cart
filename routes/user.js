@@ -39,6 +39,7 @@ router.post('/signup', (req, res) => {
     })
   }
 })
+
 router.post('/login', (req, res) => {
   if (!req.body.email || !req.body.password) {
     res.render('user/login', { error: true })
@@ -58,8 +59,10 @@ router.post('/login', (req, res) => {
 
 router.get('/cart', verifyLogin, async (req, res) => {
   let products = await userHelpers.getAllCartProducts(req.session.user._id)
-  cartCount = null;
-  cartCount = await userHelpers.getCartCount(req.session.user._id)
+  cartCount = 0;
+  if (products.length > 0) {
+    cartCount = await userHelpers.getCartCount(req.session.user._id)
+  }
   let total = 0
   products.forEach((el) => {
     let qty = el.quantity;
@@ -76,10 +79,14 @@ router.get('/logout', (req, res) => {
 })
 
 router.get('/add-to-cart/:id', (req, res) => {
-  userHelpers.addToCart(req.params.id, req.session.user._id).then((response) => {
-    res.json({ status: true })
-  })
-
+  user = req.session.user || null
+  if (user) {
+    userHelpers.addToCart(req.params.id, req.session.user._id).then((response) => {
+      res.json({ status: true })
+    })
+  } else {
+    res.json({ status: false })
+  }
 })
 router.get('/change-total', async (req, res) => {
   let products = await userHelpers.getAllCartProducts(req.session.user._id)

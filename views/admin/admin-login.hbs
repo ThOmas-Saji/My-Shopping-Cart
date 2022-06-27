@@ -1,0 +1,18 @@
+<section>
+  <div class="contianer m-auto text-center bg-light p-5" style="width:40%">
+    <h1>Admin-Login</h1>
+    {{#if error}}
+    <p class="bg-danger text-light text-center">Please fill all fileds</p>
+    {{/if}}
+    <form action="/admin/admin-login" method="post" >
+      <input {{#if error}} class="form-control is-invalid" {{/if}} {{#if loginErr}} class="form-control is-invalid"
+        {{/if}}type="text" name="email" placeholder="E-mail" />
+      <input {{#if error}} class="form-control is-invalid" {{/if}} {{#if loginErr}} class="form-control is-invalid"
+        {{/if}} type="password" name="password" placeholder="Password" />
+      <input type="submit" value="Admin Login" />
+    </form>
+    {{#if loginErr}}
+    <p class="bg-danger text-light text-center">Please provide correct email and password !</p>
+    {{/if}}
+  </div>
+</section>

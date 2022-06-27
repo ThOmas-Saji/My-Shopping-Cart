@@ -2,10 +2,18 @@
   <nav class="navbar navbar-dark border-bottom border-3 gradient-custom">
     <div class="container-fluid">
       <a class="navbar-brand" href="/admin">My Shopping Cart - Admin</a>
-      <form class="d-flex" role="search">
-        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-        <button class="btn text-light" type="submit">Search</button>
-      </form>
+      {{#if adminLoggin}}
+      <div class="dropdown">
+        <button class="btn text-light dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown"
+          aria-expanded="false">
+          Admin
+        </button>
+        <div>
+          <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+            <li><a class="dropdown-item" href="/admin/admin-logout">Logout</a></li>
+          </ul>
+        </div>
+      </div>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup"
         aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -16,7 +24,10 @@
           <a class="nav-link" href="#">All Orders</a>
           <a class="nav-link" href="#">All Users</a>
         </div>
-      </div>
+      </div> 
+      {{else}}
+      <div><a class="btn text-light" href="/">Go to app</a></div>
+      {{/if}}
     </div>
   </nav>
 </header>
