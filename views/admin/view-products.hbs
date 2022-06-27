@@ -4,36 +4,37 @@
       <a href="/admin/add-product" style="width:15% ; margin-left:auto; margin-right:2rem" class="btn bg-warning ">Add
         new Product</a>
     </div>
-    <table class="table table-dark table-striped mt-2">
+    <table class="table table-dark table-striped">
       <thead>
-        <tr style="text-align: center;">
-          <th scope="col">No.</th>
-          <th scope="col">Title</th>
-          <th scope="col">
-            <p>Description</p>
+        <tr>
+          <th>No.</th>
+          <th>Title</th>
+          <th>
+            Description
           </th>
-          <th scope="col">Price</th>
-          <th scope="col">Image</th>
-          <th scope="col">Modify</th>
+          <th>Price</th>
+          <th>Image</th>
+          <th>Modify</th>
         </tr>
       </thead>
       <tbody>
 
         {{#each products}}
-        <tr style="text-align: center;">
-          <th scope="row">{{@index}}</th>
+        <tr>
+          <th>{{@index}}</th>
           <td>{{this.name}}</td>
           <td>{{this.description}}</td>
           <td>₹{{this.price}}</td>
           <td><img width="50px" src="/product-images/{{this._id}}.jpg" /> </td>
-          <td> <div class="btn-group" role="group">
-            <a href="/admin/edit-product/{{this._id}}" class="btn btn-outline-primary">Edit</a>
-            <a href="/admin/delete-product/{{this._id}}" class="btn btn-outline-danger" onclick="return confirm('Are you sure want to delete {{this.name}} product ?')">Delete</a>
+          <td>
+            <div class="btn-group" role="group">
+              <a href="/admin/edit-product/{{this._id}}" class="btn btn-outline-primary">Edit</a>
+              <a href="/admin/delete-product/{{this._id}}" class="btn btn-outline-danger"
+                onclick="return confirm('Are you sure want to delete {{this.name}} product ?')">Delete</a>
             </div>
           </td>
         </tr>
         {{/each}}
-
       </tbody>
     </table>
   </div>
