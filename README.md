@@ -18,5 +18,4 @@ for required dependencies
 start the project
 
 # localhost:3000
-
-for the magic
+See the magic
